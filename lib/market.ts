@@ -1,4 +1,6 @@
 // lib/market.ts
+import type { UTCTimestamp } from 'lightweight-charts';
+
 export type Holding = { symbol: string; name: string; qty: number; buyPrice: number };
 export type Snap = { price: number; today: number; max: number; min: number };
 
@@ -57,12 +59,12 @@ export function simulate(symbol: string): Snap {
 
 // ---------- Formato (mejor usar <Money/> en la UI) ----------
 export function currency(n: number) {
-  // Fijamos el locale para evitar mismatch SSR/CSR si alguien lo usa
+  // Fijamos el locale para evitar mismatch SSR/CSR si alguien lo usa directo
   return n.toLocaleString('es-AR', { style: 'currency', currency: 'USD' });
 }
 
 // ---------- Serie histórica determinística ----------
-export type SeriesPoint = { time: number; value: number };
+export type SeriesPoint = { time: UTCTimestamp; value: number };
 
 /**
  * Genera una serie determinística basada en el precio y un seed opcional.
@@ -82,7 +84,8 @@ export function makeSeries(price: number, seedKey: string = 'default'): SeriesPo
     // random walk suave ±1% con leve tendencia
     const drift = (rng() - 0.5) * 0.01;
     p = Math.max(1, p * (1 + drift));
-    pts.push({ time: Math.floor(d.getTime() / 1000), value: +p.toFixed(2) });
+    const ts = Math.floor(d.getTime() / 1000) as UTCTimestamp; // <- casteo correcto
+    pts.push({ time: ts, value: +p.toFixed(2) });
   }
   return pts;
 }
