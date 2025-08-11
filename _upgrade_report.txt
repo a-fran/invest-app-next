@@ -1,0 +1,7 @@
+Applied fixes:
+- tailwind.config.ts: added darkMode: 'class'
+- lib/theme.ts: theme helpers (init/apply)
+- components/ThemeToggle.tsx: new toggle component
+- app/layout.tsx: inline theme script (pre-hydration)
+- components/Chart.tsx: theme-aware colors
+- app/api/prices/route.ts: supports ?symbol= for single fetch
