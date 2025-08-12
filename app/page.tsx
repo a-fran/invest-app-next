@@ -7,13 +7,13 @@ import Money from '@/components/Money';
 import PortfolioEditor from '@/components/PortfolioEditor';
 import { loadPortfolio, savePortfolio, PortfolioRow } from '@/lib/portfolio';
 
-import { useEffect, useMemo, useState } from "react";
-import clsx from "clsx";
+import { useEffect, useMemo, useState } from 'react';
+import clsx from 'clsx';
 
-import AreaChart from "../components/Chart";
-import { Card } from "../components/ui/Card";
-import { HOLDINGS as DEFAULT_HOLDINGS, simulate, makeSeries } from "../lib/market";
-import { fetchLivePrice } from "../lib/priceClient";
+import AreaChart from '../components/Chart';
+import { Card } from '../components/ui/Card';
+import { HOLDINGS as DEFAULT_HOLDINGS, simulate, makeSeries } from '../lib/market';
+import { fetchLivePrice } from '../lib/priceClient';
 
 // Tipos del chart para blindar la data
 import type { AreaData, UTCTimestamp } from 'lightweight-charts';
@@ -31,14 +31,13 @@ export default function IndexPage() {
 
   const [holdings, setHoldings] = useState<PortfolioRow[]>(DEFAULT_HOLDINGS);
   const [market, setMarket] = useState<Record<string, Snap>>(initMarketFrom(DEFAULT_HOLDINGS));
-  const [selected, setSelected] = useState<string>("NVDA");
-  const [watch, setWatch] = useState(["NVDA", "AMD", "META", "TSLA"]);
-  const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<string>('NVDA');
+  const [watch, setWatch] = useState(['NVDA', 'AMD', 'META', 'TSLA']);
+  const [q, setQ] = useState('');
 
   // Al montar: onboarding si no hay cartera guardada
   useEffect(() => {
-    const hasKey =
-      typeof window !== 'undefined' ? localStorage.getItem('portfolio.v1') : null;
+    const hasKey = typeof window !== 'undefined' ? localStorage.getItem('portfolio.v1') : null;
 
     if (!hasKey) {
       setHoldings([]);
@@ -61,7 +60,7 @@ export default function IndexPage() {
 
     setHoldings(stored);
     setMarket(initMarketFrom(stored));
-    setSelected(stored[0]?.symbol || "");
+    setSelected(stored[0]?.symbol || '');
     setReady(true);
   }, []);
 
@@ -79,12 +78,14 @@ export default function IndexPage() {
             [h.symbol]: { price: live.price, today: live.today, max: live.max, min: live.min },
           }));
         } else {
-          setMarket((prev) => prev[h.symbol] ? prev : { ...prev, [h.symbol]: simulate(h.symbol) });
+          setMarket((prev) => (prev[h.symbol] ? prev : { ...prev, [h.symbol]: simulate(h.symbol) }));
         }
       }
     })();
-    return () => { cancel = true; };
-  }, [ready, holdings.map(h => h.symbol).join('|')]);
+    return () => {
+      cancel = true;
+    };
+  }, [ready, holdings.map((h) => h.symbol).join('|')]);
 
   // Poll del seleccionado cada 20s
   useEffect(() => {
@@ -93,18 +94,27 @@ export default function IndexPage() {
     const tick = async () => {
       const live = await fetchLivePrice(selected);
       if (stop || !live) return;
-      setMarket((prev) => ({ ...prev, [selected]: {
-        price: live.price, today: live.today, max: live.max, min: live.min
-      }}));
+      setMarket((prev) => ({
+        ...prev,
+        [selected]: {
+          price: live.price,
+          today: live.today,
+          max: live.max,
+          min: live.min,
+        },
+      }));
     };
     tick();
     const id = setInterval(tick, 20000);
-    return () => { stop = true; clearInterval(id); };
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
   }, [ready, selected]);
 
   // WS: símbolos a seguir y merge de precios
   const liveSymbols = useMemo(
-    () => Array.from(new Set(holdings.map(h => h.symbol).filter(Boolean))),
+    () => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))),
     [holdings]
   );
   const livePrices = useFinnhubWS(liveSymbols, true);
@@ -112,7 +122,7 @@ export default function IndexPage() {
   useEffect(() => {
     const entries = Object.entries(livePrices);
     if (!entries.length) return;
-    setMarket(prev => {
+    setMarket((prev) => {
       const next = { ...prev };
       for (const [sym, p] of entries) {
         const snap = next[sym] ?? simulate(sym);
@@ -144,17 +154,22 @@ export default function IndexPage() {
   const det = rows.find((r) => r.symbol === selected) ?? rows[0];
 
   // Blindaje de tipos para el chart
-  const series = useMemo(
-    () => makeSeries(det?.s.price ?? 100),
-    [det?.s.price]
-  ) as AreaData<UTCTimestamp>[];
+  const series = useMemo(() => makeSeries(det?.s.price ?? 100), [det?.s.price]) as AreaData<
+    UTCTimestamp
+  >[];
 
   const add = () => {
     const t = q.trim().toUpperCase();
     if (!t) return;
     setWatch((w) => (w.includes(t) ? w : [...w, t]));
-    setQ("");
+    setQ('');
   };
+
+  // Símbolos para el feed de noticias (memo + dedup)
+  const newsSymbols = useMemo(
+    () => Array.from(new Set(holdings.map((h) => h.symbol).filter(Boolean))),
+    [holdings]
+  );
 
   if (!ready) return null;
 
@@ -169,14 +184,17 @@ export default function IndexPage() {
             </svg>
             <h1 className="font-semibold">Invest App — Next</h1>
           </div>
-          <div className="ml-auto"><ThemeToggle /></div>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
 
         <main className="min-h-[calc(100vh-56px)] grid place-items-center p-4">
           <div className="max-w-xl w-full rounded-2xl border border-white/10 bg-zinc-950 p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Cargá tu cartera para empezar</h2>
             <p className="text-slate-300 mb-4">
-              Elegí los tickers y cantidades. Lo guardamos en tu dispositivo y después te mostramos gráficos y métricas en vivo.
+              Elegí los tickers y cantidades. Lo guardamos en tu dispositivo y después te mostramos
+              gráficos y métricas en vivo.
             </p>
             <button className="chip hover:bg-white/10" onClick={() => setEditorOpen(true)}>
               Cargar cartera
@@ -225,7 +243,7 @@ export default function IndexPage() {
               if (typeof window !== 'undefined') localStorage.removeItem('portfolio.v1');
               setHoldings([]);
               setMarket({});
-              setSelected("");
+              setSelected('');
               setOnboarding(true);
               setEditorOpen(true);
             }}
@@ -239,7 +257,9 @@ export default function IndexPage() {
             placeholder="Agregar a watchlist (ej: NVDA)"
             className="w-64 bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm outline-none"
           />
-          <button onClick={add} className="chip hover:bg-white/10">Agregar</button>
+          <button onClick={add} className="chip hover:bg-white/10">
+            Agregar
+          </button>
         </div>
       </header>
 
@@ -249,18 +269,28 @@ export default function IndexPage() {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
           <Card>
             <div className="text-sm text-blue-200/70">Valor de la cartera</div>
-            <div className="text-2xl font-semibold mt-1"><Money value={kpis.value} /></div>
+            <div className="text-2xl font-semibold mt-1">
+              <Money value={kpis.value} />
+            </div>
             <div className="text-sm mt-1">
-              P&L:{" "}
-              <span className={clsx(kpis.pnl >= 0 ? "text-emerald-400" : "text-rose-400","font-medium")}>
-                {kpis.pnl >= 0 ? "+" : ""}<Money value={kpis.pnl} /> (
+              P&L:{' '}
+              <span
+                className={clsx(
+                  kpis.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400',
+                  'font-medium'
+                )}
+              >
+                {kpis.pnl >= 0 ? '+' : ''}
+                <Money value={kpis.pnl} /> (
                 {((kpis.pnl / (kpis.invested || 1)) * 100).toFixed(2)}%)
               </span>
             </div>
           </Card>
           <Card>
             <div className="text-sm text-blue-200/70">Aportes</div>
-            <div className="text-2xl font-semibold mt-1"><Money value={kpis.invested} /></div>
+            <div className="text-2xl font-semibold mt-1">
+              <Money value={kpis.invested} />
+            </div>
             <div className="text-sm mt-1">Compra inicial + reinversiones</div>
           </Card>
           <Card>
@@ -312,18 +342,38 @@ export default function IndexPage() {
                           <span className="text-slate-300">{r.name}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right"><Money value={r.s.price} /></td>
-                      <td className="px-3 py-2 text-right">{r.qty}</td>
-                      <td className="px-3 py-2 text-right"><Money value={r.invested} /></td>
-                      <td className="px-3 py-2 text-right"><Money value={r.value} /></td>
-                      <td className={clsx("px-3 py-2 text-right", r.pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
-                        {r.pnl >= 0 ? "+" : ""}<Money value={r.pnl} />
+                      <td className="px-3 py-2 text-right">
+                        <Money value={r.s.price} />
                       </td>
-                      <td className={clsx("px-3 py-2 text-right", r.s.today >= 0 ? "text-emerald-400" : "text-rose-400")}>
-                        {r.s.today >= 0 ? "+" : ""}{r.s.today}%
+                      <td className="px-3 py-2 text-right">{r.qty}</td>
+                      <td className="px-3 py-2 text-right">
+                        <Money value={r.invested} />
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <button className="chip hover:bg-white/10" onClick={() => setSelected(r.symbol)}>Ver</button>
+                        <Money value={r.value} />
+                      </td>
+                      <td
+                        className={clsx(
+                          'px-3 py-2 text-right',
+                          r.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        )}
+                      >
+                        {r.pnl >= 0 ? '+' : ''}
+                        <Money value={r.pnl} />
+                      </td>
+                      <td
+                        className={clsx(
+                          'px-3 py-2 text-right',
+                          r.s.today >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        )}
+                      >
+                        {r.s.today >= 0 ? '+' : ''}
+                        {r.s.today}%
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <button className="chip hover:bg-white/10" onClick={() => setSelected(r.symbol)}>
+                          Ver
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -339,24 +389,39 @@ export default function IndexPage() {
               <span className="chip">
                 {det?.symbol}
                 <span
-                  className={`ml-2 inline-block h-2 w-2 rounded-full ${isLive ? 'bg-emerald-400' : 'bg-zinc-500'}`}
+                  className={`ml-2 inline-block h-2 w-2 rounded-full ${
+                    isLive ? 'bg-emerald-400' : 'bg-zinc-500'
+                  }`}
                   title={isLive ? 'LIVE' : 'Sin ticks'}
                 />
               </span>
             </div>
-            <div className="mt-3"><AreaChart data={series} /></div>
+            <div className="mt-3">
+              <AreaChart data={series} />
+            </div>
             <div className="mt-3 text-sm grid grid-cols-2 gap-2">
-              <div>Ticker: <span className="text-blue-300">{det?.symbol}</span></div>
-              <div>Precio: <Money value={det?.s.price ?? 0} /></div>
               <div>
-                Variación hoy:{" "}
-                <span className={clsx((det?.s.today ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400")}>
-                  {(det?.s.today ?? 0) >= 0 ? "+" : ""}{det?.s.today ?? 0}%
+                Ticker: <span className="text-blue-300">{det?.symbol}</span>
+              </div>
+              <div>
+                Precio: <Money value={det?.s.price ?? 0} />
+              </div>
+              <div>
+                Variación hoy:{' '}
+                <span className={clsx((det?.s.today ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
+                  {(det?.s.today ?? 0) >= 0 ? '+' : ''}
+                  {det?.s.today ?? 0}%
                 </span>
               </div>
-              <div>Máx/Mín: <Money value={det?.s.max ?? 0} /> / <Money value={det?.s.min ?? 0} /></div>
-              <a className="text-sky-300 hover:underline col-span-2" target="_blank" rel="noreferrer"
-                 href={`https://www.bing.com/news/search?q=${encodeURIComponent((det?.symbol || '') + " stock news")}`}>
+              <div>
+                Máx/Mín: <Money value={det?.s.max ?? 0} /> / <Money value={det?.s.min ?? 0} />
+              </div>
+              <a
+                className="text-sky-300 hover:underline col-span-2"
+                target="_blank"
+                rel="noreferrer"
+                href={`https://www.bing.com/news/search?q=${encodeURIComponent((det?.symbol || '') + ' stock news')}`}
+              >
                 Noticias del ticker ↗
               </a>
             </div>
@@ -366,7 +431,7 @@ export default function IndexPage() {
         {/* Noticias + Watchlist */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
           {/* Feed de noticias de los símbolos de tu cartera */}
-          <NewsFeed symbols={Array.from(new Set(holdings.map(h => h.symbol)))} />
+          <NewsFeed symbols={newsSymbols} />
 
           {/* Watchlist */}
           <Card>
@@ -395,12 +460,12 @@ export default function IndexPage() {
         onSave={(rows) => {
           setHoldings(rows);
           savePortfolio(rows);
-          setMarket(prev => {
+          setMarket((prev) => {
             const next = { ...prev };
             for (const r of rows) if (!next[r.symbol]) next[r.symbol] = simulate(r.symbol);
             return next;
           });
-          if (!rows.some(r => r.symbol === selected) && rows.length > 0) {
+          if (!rows.some((r) => r.symbol === selected) && rows.length > 0) {
             setSelected(rows[0].symbol);
           }
           setEditorOpen(false);
