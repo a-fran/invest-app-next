@@ -61,4 +61,4 @@ export async function GET(req: Request) {
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
           // si hay rate limit (429), devolvemos vacío para ese símbolo
-          if (res.status === 429) return [] as (FinnhubNews & { symbol:
+          if (res.status === 429) return [] as unknown as (FinnhubNews & { symbol:

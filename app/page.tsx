@@ -363,12 +363,12 @@ export default function IndexPage() {
           </Card>
         </section>
 
-        {/* Noticias + Watchlist */}
+         {/* Noticias + Watchlist */}
 <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
-  {/* Feed de noticias de los símbolos en tu cartera */}
-  <NewsFeed symbols={holdings.map(h => h.symbol)} />
+  {/* Feed de noticias de los símbolos de tu cartera */}
+  <NewsFeed symbols={Array.from(new Set(holdings.map(h => h.symbol)))} />
 
-  {/* Watchlist se mantiene igual */}
+  {/* Watchlist se mantiene */}
   <Card>
     <h2 className="text-lg font-semibold mb-2">Watchlist</h2>
     <div className="flex flex-wrap gap-2">
@@ -380,6 +380,7 @@ export default function IndexPage() {
     </div>
   </Card>
 </section>
+
 
 
         <footer className="py-6 text-center text-xs text-blue-200/60">
