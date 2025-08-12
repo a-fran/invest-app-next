@@ -13,6 +13,9 @@ import { Card } from "../components/ui/Card";
 import { HOLDINGS as DEFAULT_HOLDINGS, simulate, makeSeries } from "../lib/market";
 import { fetchLivePrice } from "../lib/priceClient";
 
+// 👇 tipos del chart para blindar la data
+import type { AreaData, UTCTimestamp } from 'lightweight-charts';
+
 type Snap = { price: number; today: number; max: number; min: number };
 
 const initMarketFrom = (rows: PortfolioRow[]): Record<string, Snap> =>
@@ -60,7 +63,7 @@ export default function IndexPage() {
     setReady(true);
   }, []);
 
-  // Poll inicial/batch para today/max/min (y precio base)
+  // Poll inicial/batch
   useEffect(() => {
     if (!ready || holdings.length === 0) return;
     let cancel = false;
@@ -97,7 +100,7 @@ export default function IndexPage() {
     return () => { stop = true; clearInterval(id); };
   }, [ready, selected]);
 
-  // WS: símbolos a seguir y merge de precios en vivo
+  // WS: símbolos a seguir y merge de precios
   const liveSymbols = useMemo(
     () => Array.from(new Set(holdings.map(h => h.symbol).filter(Boolean))),
     [holdings]
@@ -111,7 +114,7 @@ export default function IndexPage() {
       const next = { ...prev };
       for (const [sym, p] of entries) {
         const snap = next[sym] ?? simulate(sym);
-        next[sym] = { ...snap, price: p }; // sólo pisamos price
+        next[sym] = { ...snap, price: p };
       }
       return next;
     });
@@ -137,7 +140,12 @@ export default function IndexPage() {
   }, [rows]);
 
   const det = rows.find((r) => r.symbol === selected) ?? rows[0];
-  const series = useMemo(() => makeSeries(det?.s.price ?? 100), [det?.s.price]);
+
+  // 👇 Blindaje de tipos para el chart
+  const series = useMemo(
+    () => makeSeries(det?.s.price ?? 100),
+    [det?.s.price]
+  ) as AreaData<UTCTimestamp>[];
 
   const add = () => {
     const t = q.trim().toUpperCase();
