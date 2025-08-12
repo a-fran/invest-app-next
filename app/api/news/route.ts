@@ -16,6 +16,8 @@ type FinnhubNews = {
   url: string;
 };
 
+type NewsItem = FinnhubNews & { symbol: string };
+
 const SYM_RE = /^[A-Z0-9.\-]{1,10}$/;
 
 export async function GET(req: Request) {
@@ -51,7 +53,7 @@ export async function GET(req: Request) {
   const fmt = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
 
   try {
-    const settled = await Promise.allSettled(
+    const settled = await Promise.allSettled<NewsItem[]>(
       symbols.map(async (sym) => {
         const url =
           `https://finnhub.io/api/v1/company-news?symbol=${encodeURIComponent(sym)}` +
@@ -59,20 +61,19 @@ export async function GET(req: Request) {
 
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
-          // Si hay rate limit (429), devolvemos vacío para ese símbolo
-          if (res.status === 429) return [] as Array<FinnhubNews & { symbol: string }>;
+          if (res.status === 429) return []; // rate limit → vacío para ese símbolo
           throw new Error(`news fetch failed: ${sym} (${res.status})`);
         }
 
         const json = (await res.json()) as FinnhubNews[];
-        return json.map(n => ({ ...n, symbol: sym } as FinnhubNews & { symbol: string }));
+        return json.map(n => ({ ...n, symbol: sym }));
       })
     );
 
-    const flat = settled.flatMap(s => s.status === 'fulfilled' ? s.value : []);
+    const flat: NewsItem[] = settled.flatMap(s => s.status === 'fulfilled' ? s.value : []);
 
     // Dedup por URL
-    const dedup = new Map<string, FinnhubNews & { symbol: string }>();
+    const dedup = new Map<string, NewsItem>();
     for (const n of flat) {
       if (!dedup.has(n.url)) dedup.set(n.url, n);
     }
