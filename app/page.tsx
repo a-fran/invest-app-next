@@ -1,4 +1,6 @@
 'use client';
+
+import NewsFeed from '@/components/NewsFeed';
 import { useFinnhubWS } from '@/lib/useFinnhubWS';
 import ThemeToggle from '@/components/ThemeToggle';
 import Money from '@/components/Money';
@@ -361,24 +363,24 @@ export default function IndexPage() {
           </Card>
         </section>
 
-        {/* Notas + Watchlist */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
-          <Card className="lg:col-span-2">
-            <h2 className="text-lg font-semibold mb-2">Notas</h2>
-            <textarea
-              placeholder="Observaciones del día, decisiones y próximos pasos…"
-              className="w-full h-40 bg-white/5 border border-white/10 rounded-md p-3 text-sm outline-none"
-            />
-          </Card>
-          <Card>
-            <h2 className="text-lg font-semibold mb-2">Watchlist</h2>
-            <div className="flex flex-wrap gap-2">
-              {watch.map((t) => (
-                <button key={t} className="chip hover:bg-white/10" onClick={() => setSelected(t)}>{t}</button>
-              ))}
-            </div>
-          </Card>
-        </section>
+        {/* Noticias + Watchlist */}
+<section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+  {/* Feed de noticias de los símbolos en tu cartera */}
+  <NewsFeed symbols={holdings.map(h => h.symbol)} />
+
+  {/* Watchlist se mantiene igual */}
+  <Card>
+    <h2 className="text-lg font-semibold mb-2">Watchlist</h2>
+    <div className="flex flex-wrap gap-2">
+      {watch.map((t) => (
+        <button key={t} className="chip hover:bg-white/10" onClick={() => setSelected(t)}>
+          {t}
+        </button>
+      ))}
+    </div>
+  </Card>
+</section>
+
 
         <footer className="py-6 text-center text-xs text-blue-200/60">
           Live vía Finnhub si configurás <code>FINNHUB_API_KEY</code> en <code>.env</code> (server) y
