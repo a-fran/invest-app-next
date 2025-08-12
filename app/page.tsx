@@ -15,7 +15,7 @@ import { Card } from "../components/ui/Card";
 import { HOLDINGS as DEFAULT_HOLDINGS, simulate, makeSeries } from "../lib/market";
 import { fetchLivePrice } from "../lib/priceClient";
 
-// 👇 tipos del chart para blindar la data
+// Tipos del chart para blindar la data
 import type { AreaData, UTCTimestamp } from 'lightweight-charts';
 
 type Snap = { price: number; today: number; max: number; min: number };
@@ -143,7 +143,7 @@ export default function IndexPage() {
 
   const det = rows.find((r) => r.symbol === selected) ?? rows[0];
 
-  // 👇 Blindaje de tipos para el chart
+  // Blindaje de tipos para el chart
   const series = useMemo(
     () => makeSeries(det?.s.price ?? 100),
     [det?.s.price]
@@ -363,25 +363,23 @@ export default function IndexPage() {
           </Card>
         </section>
 
-         {/* Noticias + Watchlist */}
-<section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
-  {/* Feed de noticias de los símbolos de tu cartera */}
-  <NewsFeed symbols={Array.from(new Set(holdings.map(h => h.symbol)))} />
+        {/* Noticias + Watchlist */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+          {/* Feed de noticias de los símbolos de tu cartera */}
+          <NewsFeed symbols={Array.from(new Set(holdings.map(h => h.symbol)))} />
 
-  {/* Watchlist se mantiene */}
-  <Card>
-    <h2 className="text-lg font-semibold mb-2">Watchlist</h2>
-    <div className="flex flex-wrap gap-2">
-      {watch.map((t) => (
-        <button key={t} className="chip hover:bg-white/10" onClick={() => setSelected(t)}>
-          {t}
-        </button>
-      ))}
-    </div>
-  </Card>
-</section>
-
-
+          {/* Watchlist */}
+          <Card>
+            <h2 className="text-lg font-semibold mb-2">Watchlist</h2>
+            <div className="flex flex-wrap gap-2">
+              {watch.map((t) => (
+                <button key={t} className="chip hover:bg-white/10" onClick={() => setSelected(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </Card>
+        </section>
 
         <footer className="py-6 text-center text-xs text-blue-200/60">
           Live vía Finnhub si configurás <code>FINNHUB_API_KEY</code> en <code>.env</code> (server) y
