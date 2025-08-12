@@ -1,10 +1,18 @@
 'use client';
 
-import { createChart, ColorType, type ISeriesApi, type AreaData, type UTCTimestamp } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  type ISeriesApi,
+  type AreaData,
+  type UTCTimestamp,
+} from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
-import type { SeriesPoint } from '@/lib/market'; // time: UTCTimestamp; value: number
 
-export default function AreaChart({ data }: { data: SeriesPoint[] }) {
+// Usamos el tipo de la lib directamente
+type Point = AreaData<UTCTimestamp>;
+
+export default function AreaChart({ data }: { data: Point[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,22 +42,16 @@ export default function AreaChart({ data }: { data: SeriesPoint[] }) {
       lineColor: line,
     });
 
-    // Nuestra SeriesPoint ya cumple con AreaData<UTCTimestamp>
-    series.setData(data as AreaData<UTCTimestamp>[]);
+    series.setData(data); // ya es AreaData<UTCTimestamp>[]
 
-    // Resize responsivo
     const ro = new ResizeObserver(() => {
       if (!ref.current) return;
       chart.applyOptions({ width: ref.current.clientWidth });
     });
     ro.observe(ref.current);
 
-    return () => {
-      ro.disconnect();
-      chart.remove();
-    };
+    return () => { ro.disconnect(); chart.remove(); };
   }, [data]);
 
-  // Asegurá que el contenedor ocupe el ancho disponible
   return <div ref={ref} className="w-full" />;
 }
